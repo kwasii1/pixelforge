@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PurchaseCreditsRequest;
-use App\Models\CreditTransaction;
+use App\Http\Resources\CreditTransactionResource;
 use App\Services\Credits\CreditLedger;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
@@ -26,18 +26,7 @@ class CreditController extends Controller
 
         return Inertia::render('credits/Index', [
             'packs' => PurchaseCreditsRequest::PACKS,
-            'transactions' => $transactions->through(fn (CreditTransaction $transaction): array => [
-                'id' => $transaction->id,
-                'label' => $transaction->type->label(),
-                'type' => $transaction->type->value,
-                'prompt' => $transaction->generation?->prompt,
-                'generationId' => $transaction->generation_id,
-                'amount' => [
-                    'exact' => Money::toDecimal($transaction->amount),
-                    'display' => Money::format($transaction->amount),
-                ],
-                'createdAt' => $transaction->created_at?->toIso8601ZuluString(),
-            ]),
+            'transactions' => CreditTransactionResource::collection($transactions),
         ]);
     }
 
