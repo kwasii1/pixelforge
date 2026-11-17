@@ -3,7 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { Menu } from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import AppLogoTile from '@/components/AppLogoTile.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -82,7 +82,7 @@ const mainNavItems = computed<NavItem[]>(() => [
                     <SheetContent side="left" class="w-72 p-6">
                         <SheetTitle class="sr-only">Navigation menu</SheetTitle>
                         <SheetHeader class="p-0 text-left">
-                            <AppLogoIcon class="size-6 fill-current" />
+                            <AppLogoTile class="size-8" />
                         </SheetHeader>
                         <nav class="-mx-3 flex flex-col gap-1">
                             <Link
