@@ -4,6 +4,7 @@ namespace App\Services\Generations;
 
 use App\Enums\GenerationStatus;
 use App\Models\Generation;
+use App\Services\Credits\CreditLedger;
 use App\Services\Pixelforge\GenerationData;
 use App\Services\Pricing\PricingCalculator;
 use Carbon\CarbonImmutable;
@@ -16,11 +17,15 @@ use UnexpectedValueException;
  * Webhooks, polling and the submit job all report what Pixelforge says through
  * here. Each call locks the row, so concurrent reports are applied one at a
  * time, and the status only ever moves forward. A generation is priced on the
- * one transition into succeeded, so it can never be charged twice.
+ * one transition into succeeded, so it can never be charged twice, and the
+ * user's credits are settled in the same transaction.
  */
 class GenerationRecorder
 {
-    public function __construct(private readonly PricingCalculator $calculator) {}
+    public function __construct(
+        private readonly PricingCalculator $calculator,
+        private readonly CreditLedger $ledger,
+    ) {}
 
     /**
      * Apply a generation object from Pixelforge (an API response or a webhook event).
@@ -106,6 +111,8 @@ class GenerationRecorder
         $generation->completed_at = $data->completedAt ?? now();
         $generation->error_code = null;
         $generation->error_message = null;
+
+        $this->ledger->settle($generation);
     }
 
     private function recordFailure(Generation $generation, string $errorCode, ?string $message, ?CarbonImmutable $completedAt): void
@@ -116,6 +123,8 @@ class GenerationRecorder
         $generation->error_code = $errorCode;
         $generation->error_message = $message;
         $generation->completed_at = $completedAt ?? now();
+
+        $this->ledger->release($generation);
     }
 
     private function lock(Generation $generation): Generation

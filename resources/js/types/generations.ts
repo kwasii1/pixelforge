@@ -3,6 +3,11 @@ export type Money = {
     display: string;
 };
 
+export type Credits = {
+    balance: Money;
+    balanceNanodollars: number;
+};
+
 export type Option = {
     value: string;
     label: string;

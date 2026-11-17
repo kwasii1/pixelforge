@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Services\Credits\CreditLedger;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -56,5 +58,15 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),
         ]);
+    }
+
+    /**
+     * Give the user purchased credits, recorded in the ledger like a real purchase.
+     */
+    public function withCredits(int $dollars = 10): static
+    {
+        return $this->afterCreating(function (User $user) use ($dollars): void {
+            app(CreditLedger::class)->purchase($user, $dollars * Money::NANODOLLARS_PER_DOLLAR);
+        });
     }
 }
