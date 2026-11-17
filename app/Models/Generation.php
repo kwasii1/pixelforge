@@ -32,8 +32,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $estimated_max_price
  * @property int|null $provider_cost
  * @property int|null $price
- * @property array<string, int>|null $usage
- * @property array<string, string>|null $rates
+ * @property array{input_text_tokens: int, input_image_tokens: int, output_tokens: int, reasoning_tokens: int, total_tokens?: int}|null $usage
+ * @property array{input_text_tokens: string, input_image_tokens: string, output_tokens: string, reasoning_tokens: string}|null $rates
  * @property string|null $image_url
  * @property CarbonImmutable|null $image_url_expires_at
  * @property string|null $error_code
