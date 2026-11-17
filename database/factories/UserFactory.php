@@ -69,4 +69,14 @@ class UserFactory extends Factory
             app(CreditLedger::class)->purchase($user, $dollars * Money::NANODOLLARS_PER_DOLLAR);
         });
     }
+
+    /**
+     * An operator who can see the admin report.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_admin' => true,
+        ]);
+    }
 }

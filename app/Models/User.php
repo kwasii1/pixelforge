@@ -22,6 +22,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property int $balance Nanodollars, the sum of the user's credit transactions.
+ * @property bool $is_admin Can see the operator report. Granted with app:make-admin.
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -43,6 +44,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
      */
     protected $attributes = [
         'balance' => 0,
+        'is_admin' => false,
     ];
 
     /**
@@ -73,6 +75,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'balance' => 'integer',
+            'is_admin' => 'boolean',
         ];
     }
 }

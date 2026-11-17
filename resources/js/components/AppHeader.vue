@@ -22,6 +22,7 @@ import {
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
+import { report as adminReport } from '@/routes/admin';
 import { index as creditsIndex } from '@/routes/credits';
 import { create, index } from '@/routes/generations';
 import type { BreadcrumbItem, NavItem } from '@/types';
@@ -42,7 +43,7 @@ const balanceTitle = computed(() =>
 );
 const { isCurrentUrl } = useCurrentUrl();
 
-const mainNavItems: NavItem[] = [
+const mainNavItems = computed<NavItem[]>(() => [
     {
         title: 'Generate',
         href: create(),
@@ -55,7 +56,10 @@ const mainNavItems: NavItem[] = [
         title: 'Credits',
         href: creditsIndex(),
     },
-];
+    ...(auth.value.user.is_admin
+        ? [{ title: 'Report', href: adminReport() }]
+        : []),
+]);
 </script>
 
 <template>
