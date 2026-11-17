@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// No "verified" middleware: the app has no mail provider in production, so requiring a verified
+// email would lock every new account out. Account settings in routes/settings.php still require it.
+Route::middleware(['auth'])->group(function () {
     Route::redirect('dashboard', 'generate')->name('dashboard');
 
     Route::get('generate', [GenerationController::class, 'create'])->name('generations.create');
