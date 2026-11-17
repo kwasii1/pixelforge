@@ -34,6 +34,9 @@ return [
         'webhook_secret' => env('PIXELFORGE_WEBHOOK_SECRET'),
         'webhook_tolerance_seconds' => 300,
 
+        // How often pixelforge:sync-generations polls for generations whose webhooks went missing.
+        'sync_interval_minutes' => (int) env('PIXELFORGE_SYNC_INTERVAL_MINUTES', 1),
+
         /*
          * Users pay Pixelforge's cost plus this markup, as an exact fraction
          * (numerator / denominator) so money math never touches floats.
