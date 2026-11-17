@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\GenerationController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -16,6 +17,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('credits', [CreditController::class, 'index'])->name('credits.index');
     Route::post('credits', [CreditController::class, 'store'])->name('credits.store');
+
+    Route::post('notifications/read', [NotificationController::class, 'markAllAsRead'])->name('notifications.read');
 
     Route::get('admin/report', ReportController::class)
         ->middleware('can:viewAdminReport')

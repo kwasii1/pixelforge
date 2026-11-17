@@ -1,6 +1,7 @@
 import type { Directive } from 'vue';
 import type { Auth } from '@/types/auth';
 import type { Credits } from '@/types/generations';
+import type { Notifications } from '@/types/notifications';
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -22,6 +23,8 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             credits: Credits | null;
+            notifications: Notifications | null;
+            generationsInProgress: boolean;
             [key: string]: unknown;
         };
     }
