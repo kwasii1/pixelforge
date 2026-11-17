@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Support\Money;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -49,6 +50,22 @@ class HandleInertiaRequests extends Middleware
                 ],
                 'balanceNanodollars' => $request->user()->balance,
             ],
+            'notifications' => fn (): ?array => $request->user() === null ? null : [
+                'unreadCount' => $request->user()->unreadNotifications()->count(),
+                'recent' => $request->user()->notifications()
+                    ->latest()
+                    ->limit(8)
+                    ->get()
+                    ->map(fn (DatabaseNotification $notification): array => [
+                        ...$notification->data,
+                        'id' => $notification->id,
+                        'read' => $notification->read_at !== null,
+                        'createdAt' => $notification->created_at?->toIso8601ZuluString(),
+                    ])
+                    ->all(),
+            ],
+            // Lets the header poll for news only while something is still running.
+            'generationsInProgress' => fn (): bool => (bool) $request->user()?->generations()->inProgress()->exists(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

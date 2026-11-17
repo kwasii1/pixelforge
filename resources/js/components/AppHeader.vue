@@ -4,6 +4,7 @@ import { Menu } from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import AppLogoTile from '@/components/AppLogoTile.vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui/sheet';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { useGenerationNotifications } from '@/composables/useGenerationNotifications';
 import { getInitials } from '@/composables/useInitials';
 import { report as adminReport } from '@/routes/admin';
 import { index as creditsIndex } from '@/routes/credits';
@@ -38,6 +40,8 @@ const props = withDefaults(defineProps<Props>(), {
 const page = usePage();
 const auth = computed(() => page.props.auth);
 const credits = computed(() => page.props.credits);
+
+useGenerationNotifications();
 const balanceTitle = computed(() =>
     credits.value ? 'Balance: $' + credits.value.balance.exact : '',
 );
@@ -130,6 +134,7 @@ const mainNavItems = computed<NavItem[]>(() => [
                         {{ credits.balance.display }}
                         <span class="sr-only">credit balance</span>
                     </Link>
+                    <NotificationBell />
                     <DropdownMenu>
                         <DropdownMenuTrigger :as-child="true">
                             <Button

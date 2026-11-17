@@ -4,6 +4,7 @@ namespace App\Services\Generations;
 
 use App\Enums\GenerationStatus;
 use App\Models\Generation;
+use App\Notifications\GenerationFinished;
 use App\Services\Credits\CreditLedger;
 use App\Services\Pixelforge\GenerationData;
 use App\Services\Pricing\PricingCalculator;
@@ -53,6 +54,7 @@ class GenerationRecorder
             }
 
             $locked->save();
+            $this->notifyIfJustFinished($locked);
 
             return $generation->setRawAttributes($locked->getAttributes(), sync: true);
         });
@@ -69,6 +71,7 @@ class GenerationRecorder
             if (! $locked->status->isFinal() && ! $locked->isKnownToPixelforge()) {
                 $this->recordFailure($locked, $errorCode, $message, now());
                 $locked->save();
+                $this->notifyIfJustFinished($locked);
             }
 
             return $generation->setRawAttributes($locked->getAttributes(), sync: true);
@@ -125,6 +128,16 @@ class GenerationRecorder
         $generation->completed_at = $completedAt ?? now();
 
         $this->ledger->release($generation);
+    }
+
+    /**
+     * Tell the user once, in the same transaction as the transition into succeeded or failed.
+     */
+    private function notifyIfJustFinished(Generation $generation): void
+    {
+        if ($generation->wasChanged('status') && $generation->status->isFinal()) {
+            $generation->user->notify(new GenerationFinished($generation));
+        }
     }
 
     private function lock(Generation $generation): Generation
