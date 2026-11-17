@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Menu } from '@lucide/vue';
+import { Menu } from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
@@ -22,7 +22,7 @@ import {
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
-import { dashboard } from '@/routes';
+import { create, index } from '@/routes/generations';
 import type { BreadcrumbItem, NavItem } from '@/types';
 
 type Props = {
@@ -39,9 +39,12 @@ const { isCurrentUrl } = useCurrentUrl();
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
+        title: 'Generate',
+        href: create(),
+    },
+    {
+        title: 'History',
+        href: index(),
     },
 ];
 </script>
@@ -84,7 +87,7 @@ const mainNavItems: NavItem[] = [
                     </SheetContent>
                 </Sheet>
 
-                <Link :href="dashboard()" class="flex items-center gap-2">
+                <Link :href="create()" class="flex items-center gap-2">
                     <AppLogo />
                 </Link>
 

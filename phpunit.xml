@@ -29,6 +29,10 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <env name="INERTIA_SSR_ENABLED" value="false"/>
+        <env name="PIXELFORGE_API_URL" value="https://pixelforge.test/v1"/>
+        <env name="PIXELFORGE_API_KEY" value="pk_test"/>
+        <env name="PIXELFORGE_WEBHOOK_SECRET" value="whsec_test"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

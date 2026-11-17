@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /*
@@ -16,6 +17,7 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(fn () => Http::preventStrayRequests())
     ->in('Feature');
 
 /*
@@ -109,4 +111,15 @@ function succeededPixelforgeGeneration(array $overrides = []): array
 function pixelforgeError(string $code, string $type = 'rate_limit_error', string $message = 'Pixelforge error.'): array
 {
     return ['error' => ['type' => $type, 'code' => $code, 'message' => $message]];
+}
+
+/**
+ * Fake GET /v1/pricing with the published pricing tables.
+ */
+function fakePixelforgePricing(): void
+{
+    Http::fake(['pixelforge.test/v1/pricing' => Http::response(json_decode(
+        file_get_contents(__DIR__.'/Fixtures/pixelforge/pricing.json'),
+        true,
+    ))]);
 }

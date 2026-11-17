@@ -7,13 +7,6 @@ use App\Services\Pixelforge\PixelforgeException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
-beforeEach(function () {
-    Http::preventStrayRequests();
-
-    config()->set('services.pixelforge.base_url', 'https://pixelforge.test/v1');
-    config()->set('services.pixelforge.api_key', 'pk_test');
-});
-
 it('creates a generation with the idempotency key and bearer token', function () {
     Http::fake(['pixelforge.test/v1/generations' => Http::response(pixelforgeGeneration(), 202)]);
 
@@ -156,6 +149,21 @@ it('caches the pricing table', function () {
 
     expect($pricing->rates->outputPerMillion)->toBe(40_000_000_000);
     Http::assertSentCount(1);
+});
+
+it('falls back to the last known pricing when Pixelforge is unavailable', function () {
+    $pricing = json_decode(file_get_contents(base_path('tests/Fixtures/pixelforge/pricing.json')), true);
+    Http::fake(['pixelforge.test/v1/pricing' => Http::sequence()
+        ->push($pricing)
+        ->push(pixelforgeError('overloaded', 'api_error'), 503)]);
+    $client = app(PixelforgeClient::class);
+    $client->pricing();
+    $this->travel(2)->hours();
+
+    $fallback = $client->pricing();
+
+    expect($fallback->rates->outputPerMillion)->toBe(40_000_000_000);
+    Http::assertSentCount(2);
 });
 
 it('requests usage for an inclusive date range', function () {

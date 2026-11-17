@@ -104,6 +104,25 @@ class Generation extends Model
     }
 
     /**
+     * Why a failed generation failed, in words a user can act on.
+     */
+    public function failureReason(): ?string
+    {
+        if ($this->status !== GenerationStatus::Failed) {
+            return null;
+        }
+
+        return match ($this->error_code) {
+            'generation_failed' => "Pixelforge couldn't produce an image for this prompt. Try rewording it.",
+            'internal_error' => 'Pixelforge had an internal error. Trying again usually works.',
+            'content_policy_violation' => 'Pixelforge rejected this prompt under its content policy.',
+            'daily_limit_exceeded' => 'The daily generation limit is used up. It resets at 00:00 UTC.',
+            'submission_timed_out' => 'Pixelforge stayed busy for too long, so this was never started.',
+            default => $this->error_message ?? 'Something went wrong.',
+        };
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
