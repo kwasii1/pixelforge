@@ -60,12 +60,12 @@ php artisan test
 
 **The estimate** is a range, because two token counts are only known once the image finishes:
 
-| Tokens | Before submitting |
-| --- | --- |
-| Prompt text | `ceil(characters / 4)` ±15% (Unicode characters, not bytes) |
-| Reference images | exactly 765 each |
-| Image output | exact, from the size and quality table |
-| Reasoning | min–max range by quality |
+| Tokens           | Before submitting                                           |
+| ---------------- | ----------------------------------------------------------- |
+| Prompt text      | `ceil(characters / 4)` ±15% (Unicode characters, not bytes) |
+| Reference images | exactly 765 each                                            |
+| Image output     | exact, from the size and quality table                      |
+| Reasoning        | min–max range by quality                                    |
 
 Both ends are priced with the same formula as the actual cost. The browser runs a line-for-line copy of `PricingCalculator::estimate` for the live preview, and the server recomputes and stores its own estimate on submit. The actual charge can never exceed the top of the range.
 
@@ -79,19 +79,19 @@ Both ends are priced with the same formula as the actual cost. The browser runs 
 
 ## Coping with Pixelforge
 
-| Pixelforge does this | The app does this |
-| --- | --- |
+| Pixelforge does this                                         | The app does this                                                                                                                                                                                     |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 429 rate or concurrency limit, 503 overloaded, network error | The `SubmitGeneration` job waits for `Retry-After` and backs off further each time, for up to 10 minutes. Meanwhile the UI shows "Waiting for capacity". After that it fails the generation for free. |
-| Retried requests | The generation's UUID is the `Idempotency-Key` on every attempt, so Pixelforge creates and bills at most one generation for it. |
-| 400 content policy, 429 daily limit | Fails straight away, free, with a plain-language reason. |
-| Accepts a generation, then it fails | Recorded as failed with $0 charged. "Try again" refills the form. |
-| Duplicate webhooks | Event ids are unique in `webhook_events`. A redelivery gets a 200 and is not processed again. |
-| Out-of-order webhooks | Events are applied by the generation's status, which only moves forward (`queued → processing → succeeded \| failed`). Succeeded and failed are final. |
-| The same success reported by two different events | The cost is recorded only on the single transition into `succeeded`, and the ledger's unique `charge` prevents a second charge. |
-| A webhook arrives before the create request returns | Matched by our UUID in `metadata.generation_id`. |
-| A webhook never arrives | `pixelforge:sync-generations` runs every minute and polls generations with no news for two minutes. It also re-queues submissions that were lost. |
-| A forged or replayed webhook | HMAC-SHA256 signature over `"t.raw_body"`, compared in constant time, and rejected if older than five minutes. |
-| A request timed out but actually went through | If we had already failed it locally, Pixelforge's later report wins. The cost we record then matches what Pixelforge billed. |
+| Retried requests                                             | The generation's UUID is the `Idempotency-Key` on every attempt, so Pixelforge creates and bills at most one generation for it.                                                                       |
+| 400 content policy, 429 daily limit                          | Fails straight away, free, with a plain-language reason.                                                                                                                                              |
+| Accepts a generation, then it fails                          | Recorded as failed with $0 charged. "Try again" refills the form.                                                                                                                                     |
+| Duplicate webhooks                                           | Event ids are unique in `webhook_events`. A redelivery gets a 200 and is not processed again.                                                                                                         |
+| Out-of-order webhooks                                        | Events are applied by the generation's status, which only moves forward (`queued → processing → succeeded \| failed`). Succeeded and failed are final.                                                |
+| The same success reported by two different events            | The cost is recorded only on the single transition into `succeeded`, and the ledger's unique `charge` prevents a second charge.                                                                       |
+| A webhook arrives before the create request returns          | Matched by our UUID in `metadata.generation_id`.                                                                                                                                                      |
+| A webhook never arrives                                      | `pixelforge:sync-generations` runs every minute and polls generations with no news for two minutes. It also re-queues submissions that were lost.                                                     |
+| A forged or replayed webhook                                 | HMAC-SHA256 signature over `"t.raw_body"`, compared in constant time, and rejected if older than five minutes.                                                                                        |
+| A request timed out but actually went through                | If we had already failed it locally, Pixelforge's later report wins. The cost we record then matches what Pixelforge billed.                                                                          |
 
 All status and money changes go through one class, `GenerationRecorder`. It locks the generation row, so concurrent webhooks and polls are applied one at a time.
 
@@ -105,29 +105,29 @@ All status and money changes go through one class, `GenerationRecorder`. It lock
 
 ## Code map
 
-| Concern | Where |
-| --- | --- |
-| Money helpers | `app/Support/Money.php` |
-| Cost and estimate formulas | `app/Services/Pricing/PricingCalculator.php` (browser copy: `resources/js/composables/useCostEstimate.ts`) |
-| Pixelforge API client and errors | `app/Services/Pixelforge/` |
-| Status changes and cost recording | `app/Services/Generations/GenerationRecorder.php` |
-| Credit ledger | `app/Services/Credits/CreditLedger.php` |
-| Submission with retries | `app/Jobs/SubmitGeneration.php` |
-| Webhooks | `routes/webhooks.php`, `app/Http/Middleware/VerifyPixelforgeSignature.php`, `app/Jobs/ProcessPixelforgeEvent.php` |
-| Polling fallback | `app/Console/Commands/SyncPixelforgeGenerations.php` |
-| Operator report | `app/Services/Reports/SpendReport.php` |
+| Concern                           | Where                                                                                                             |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Money helpers                     | `app/Support/Money.php`                                                                                           |
+| Cost and estimate formulas        | `app/Services/Pricing/PricingCalculator.php` (browser copy: `resources/js/composables/useCostEstimate.ts`)        |
+| Pixelforge API client and errors  | `app/Services/Pixelforge/`                                                                                        |
+| Status changes and cost recording | `app/Services/Generations/GenerationRecorder.php`                                                                 |
+| Credit ledger                     | `app/Services/Credits/CreditLedger.php`                                                                           |
+| Submission with retries           | `app/Jobs/SubmitGeneration.php`                                                                                   |
+| Webhooks                          | `routes/webhooks.php`, `app/Http/Middleware/VerifyPixelforgeSignature.php`, `app/Jobs/ProcessPixelforgeEvent.php` |
+| Polling fallback                  | `app/Console/Commands/SyncPixelforgeGenerations.php`                                                              |
+| Operator report                   | `app/Services/Reports/SpendReport.php`                                                                            |
 
 ## Trying the failure modes
 
 Pixelforge reacts to keywords anywhere in the prompt:
 
-| Keyword | What you'll see |
-| --- | --- |
-| `[fail]` | Accepted, then failed. $0 charged, and the hold is returned. |
-| `[blocked]` | Rejected under the content policy straight away. $0. |
+| Keyword        | What you'll see                                                                      |
+| -------------- | ------------------------------------------------------------------------------------ |
+| `[fail]`       | Accepted, then failed. $0 charged, and the hold is returned.                         |
+| `[blocked]`    | Rejected under the content policy straight away. $0.                                 |
 | `[overloaded]` | 503 on every attempt. "Waiting for capacity", then failed for free after 10 minutes. |
-| `[slow]` | 60 to 90 seconds of processing. |
-| `[duplicate]` | Every webhook is sent twice, and is still charged once. |
-| `[succeed]` | Never fails at random. |
+| `[slow]`       | 60 to 90 seconds of processing.                                                      |
+| `[duplicate]`  | Every webhook is sent twice, and is still charged once.                              |
+| `[succeed]`    | Never fails at random.                                                               |
 
 Submit four or more at once to see the concurrency limit queue them up.
