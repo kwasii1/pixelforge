@@ -23,7 +23,7 @@ class GenerationController extends Controller
         $generations = $request->user()->generations()
             ->latest()
             ->orderByDesc('id')
-            ->paginate(24);
+            ->paginate(12);
 
         return Inertia::render('generations/Index', [
             'generations' => GenerationResource::collection($generations),

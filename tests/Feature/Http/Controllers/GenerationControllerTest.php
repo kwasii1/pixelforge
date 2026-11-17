@@ -29,6 +29,19 @@ describe('index', function () {
             ->where('hasGenerationsInProgress', true));
     });
 
+    it('pages through generations twelve at a time', function () {
+        $user = User::factory()->create();
+        Generation::factory()->for($user)->succeeded()->count(13)->create();
+
+        $response = $this->actingAs($user)->get(route('generations.index', ['page' => 2]));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->has('generations.data', 1)
+            ->where('generations.meta.current_page', 2)
+            ->where('generations.meta.last_page', 2)
+            ->where('generations.meta.total', 13));
+    });
+
     it('shows the estimate, the exact charge and how it was worked out for a succeeded generation', function () {
         $generation = Generation::factory()->succeeded()->create();
 

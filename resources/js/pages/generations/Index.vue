@@ -5,17 +5,15 @@ import GenerationCost from '@/components/generations/GenerationCost.vue';
 import GenerationDetails from '@/components/generations/GenerationDetails.vue';
 import GenerationImage from '@/components/generations/GenerationImage.vue';
 import Heading from '@/components/Heading.vue';
+import Pagination from '@/components/Pagination.vue';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/dates';
 import { create } from '@/routes/generations';
 import type { Generation } from '@/types/generations';
+import type { Paginated } from '@/types/pagination';
 
 const props = defineProps<{
-    generations: {
-        data: Generation[];
-        links: { prev: string | null; next: string | null };
-        meta: { current_page: number; last_page: number };
-    };
+    generations: Paginated<Generation>;
     hasGenerationsInProgress: boolean;
 }>();
 
@@ -158,46 +156,7 @@ const detailsOpen = computed({
             </Button>
         </div>
 
-        <nav
-            v-if="generations.meta.last_page > 1"
-            class="mt-8 flex items-center justify-between text-sm"
-            aria-label="Pagination"
-        >
-            <Button
-                as-child
-                variant="outline"
-                size="sm"
-                :disabled="!generations.links.prev"
-            >
-                <Link
-                    v-if="generations.links.prev"
-                    :href="generations.links.prev"
-                    preserve-scroll
-                >
-                    Newer
-                </Link>
-                <span v-else>Newer</span>
-            </Button>
-            <span class="text-muted-foreground tabular-nums">
-                Page {{ generations.meta.current_page }} of
-                {{ generations.meta.last_page }}
-            </span>
-            <Button
-                as-child
-                variant="outline"
-                size="sm"
-                :disabled="!generations.links.next"
-            >
-                <Link
-                    v-if="generations.links.next"
-                    :href="generations.links.next"
-                    preserve-scroll
-                >
-                    Older
-                </Link>
-                <span v-else>Older</span>
-            </Button>
-        </nav>
+        <Pagination :meta="generations.meta" class="mt-10" />
 
         <GenerationDetails v-model:open="detailsOpen" :generation="selected" />
     </div>

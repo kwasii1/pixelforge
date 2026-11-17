@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { store } from '@/actions/App/Http/Controllers/CreditController';
 import Heading from '@/components/Heading.vue';
+import Pagination from '@/components/Pagination.vue';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/dates';
 import type { Money } from '@/types/generations';
+import type { Paginated } from '@/types/pagination';
 
 type Transaction = {
     id: string;
@@ -19,11 +21,7 @@ type Transaction = {
 
 defineProps<{
     packs: number[];
-    transactions: {
-        data: Transaction[];
-        links: { prev: string | null; next: string | null };
-        meta: { current_page: number; last_page: number };
-    };
+    transactions: Paginated<Transaction>;
 }>();
 
 const page = usePage();
@@ -127,27 +125,7 @@ function buy(dollars: number): void {
                 No activity yet. Buy credits to start generating.
             </p>
 
-            <nav
-                v-if="transactions.meta.last_page > 1"
-                class="mt-4 flex justify-between text-sm"
-                aria-label="Pagination"
-            >
-                <Link
-                    v-if="transactions.links.prev"
-                    :href="transactions.links.prev"
-                    class="underline underline-offset-4"
-                >
-                    Newer
-                </Link>
-                <span v-else />
-                <Link
-                    v-if="transactions.links.next"
-                    :href="transactions.links.next"
-                    class="underline underline-offset-4"
-                >
-                    Older
-                </Link>
-            </nav>
+            <Pagination :meta="transactions.meta" class="mt-6" />
         </section>
     </div>
 </template>
