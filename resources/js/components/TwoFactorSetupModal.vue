@@ -114,7 +114,7 @@ watch(
         <DialogContent class="sm:max-w-md">
             <DialogHeader class="flex items-center justify-center">
                 <div
-                    class="mb-3 w-auto rounded-full border border-border bg-card p-0.5 shadow-sm"
+                    class="shadow-sm mb-3 w-auto rounded-full border border-border bg-card p-0.5"
                 >
                     <div
                         class="relative overflow-hidden rounded-full border border-border bg-muted p-2.5"
@@ -162,7 +162,7 @@ watch(
                             >
                                 <div
                                     v-if="!qrCodeSvg"
-                                    class="absolute inset-0 z-10 flex aspect-square h-auto w-full animate-pulse items-center justify-center bg-background"
+                                    class="absolute inset-0 z-10 flex aspect-square h-auto w-full items-center justify-center bg-background"
                                 >
                                     <Spinner class="size-6" />
                                 </div>
@@ -226,7 +226,7 @@ watch(
                                     >
                                         <Check
                                             v-if="copied"
-                                            class="w-4 text-green-500"
+                                            class="w-4 text-foreground"
                                         />
                                         <Copy v-else class="w-4" />
                                     </button>
