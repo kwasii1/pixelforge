@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\CreditTransaction;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -41,6 +42,18 @@ it('shows the balance and only the user\'s own activity', function () {
         ->where('transactions.meta.last_page', 1)
         ->where('transactions.links.next', null)
         ->where('packs', [5, 10, 25]));
+});
+
+it('pages through activity twenty entries at a time', function () {
+    $user = User::factory()->create();
+    CreditTransaction::factory()->for($user)->count(21)->create();
+
+    $response = $this->actingAs($user)->get(route('credits.index', ['page' => 2]));
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->has('transactions.data', 1)
+        ->where('transactions.meta.current_page', 2)
+        ->where('transactions.meta.last_page', 2));
 });
 
 it('redirects guests to the login page', function () {

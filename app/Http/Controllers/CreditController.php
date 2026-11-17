@@ -22,7 +22,7 @@ class CreditController extends Controller
             ->with('generation:id,prompt')
             ->latest()
             ->orderByDesc('id')
-            ->paginate(30);
+            ->paginate(20);
 
         return Inertia::render('credits/Index', [
             'packs' => PurchaseCreditsRequest::PACKS,
