@@ -43,7 +43,7 @@ const open = defineModel<boolean>('open', { required: true });
                     </DialogDescription>
                 </DialogHeader>
 
-                <GenerationImage :generation="generation" />
+                <GenerationImage :generation="generation" variant="preview" />
 
                 <p class="text-sm whitespace-pre-wrap">
                     {{ generation.prompt }}

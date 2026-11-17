@@ -2,19 +2,22 @@
 import { computed, ref } from 'vue';
 import type { Generation } from '@/types/generations';
 
-const props = defineProps<{
-    generation: Generation;
-}>();
+const props = withDefaults(
+    defineProps<{
+        generation: Generation;
+        /**
+         * "tile": a square frame for grid cards. "preview": a fixed-height frame for the details dialog.
+         * Either way every orientation gets the same frame and the whole image is shown, letterboxed.
+         */
+        variant?: 'tile' | 'preview';
+    }>(),
+    { variant: 'tile' },
+);
 
 const failedToLoad = ref(false);
 
-const aspectClass = computed(
-    () =>
-        ({
-            '1024x1024': 'aspect-square',
-            '1536x1024': 'aspect-[3/2]',
-            '1024x1536': 'aspect-[2/3]',
-        })[props.generation.size] ?? 'aspect-square',
+const frameClass = computed(() =>
+    props.variant === 'preview' ? 'h-[min(60dvh,32rem)]' : 'aspect-square',
 );
 
 const showImage = computed(
@@ -41,22 +44,19 @@ const placeholder = computed(() => {
 
 <template>
     <div
-        class="overflow-hidden rounded-md border bg-muted"
-        :class="aspectClass"
+        class="flex w-full items-center justify-center overflow-hidden rounded-md border bg-muted"
+        :class="frameClass"
     >
         <img
             v-if="showImage"
             :src="generation.imageUrl ?? undefined"
             :alt="generation.prompt"
             loading="lazy"
-            class="size-full object-cover"
+            class="size-full object-contain"
             @error="failedToLoad = true"
         />
-        <div
-            v-else
-            class="flex size-full items-center justify-center p-4 text-center text-sm text-muted-foreground"
-        >
+        <p v-else class="p-4 text-center text-sm text-muted-foreground">
             {{ placeholder }}
-        </div>
+        </p>
     </div>
 </template>
