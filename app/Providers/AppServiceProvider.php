@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Pixelforge\PixelforgeClient;
 use App\Services\Pricing\PricingCalculator;
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -38,6 +39,19 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         Gate::define('viewAdminReport', fn (User $user): bool => $user->is_admin);
+
+        $this->configureDevCommands();
+    }
+
+    /**
+     * Processes started by `php artisan dev` (and `composer run dev`) besides the defaults.
+     *
+     * The scheduler runs pixelforge:sync-generations every minute, the fallback
+     * that picks up results when a webhook never arrives.
+     */
+    protected function configureDevCommands(): void
+    {
+        DevCommands::artisan('schedule:work', 'scheduler')->green();
     }
 
     /**
