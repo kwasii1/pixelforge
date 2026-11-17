@@ -8,4 +8,10 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('pixelforge:sync-generations')->everyMinute()->withoutOverlapping();
+/*
+ * The safety net for missed webhooks. On Laravel Cloud every scheduled run wakes a
+ * sleeping environment, so production runs it less often to let the app scale to zero.
+ */
+Schedule::command('pixelforge:sync-generations')
+    ->cron('*/'.max(1, (int) config('services.pixelforge.sync_interval_minutes')).' * * * *')
+    ->withoutOverlapping();
