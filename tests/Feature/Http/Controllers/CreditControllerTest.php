@@ -37,6 +37,9 @@ it('shows the balance and only the user\'s own activity', function () {
         ->where('credits.balance', ['exact' => '5.000000000', 'display' => '$5.00'])
         ->has('transactions.data', 1)
         ->where('transactions.data.0.amount.exact', '5.000000000')
+        ->where('transactions.meta.current_page', 1)
+        ->where('transactions.meta.last_page', 1)
+        ->where('transactions.links.next', null)
         ->where('packs', [5, 10, 25]));
 });
 
