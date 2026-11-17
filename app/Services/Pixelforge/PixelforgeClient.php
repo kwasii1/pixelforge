@@ -21,6 +21,8 @@ class PixelforgeClient
 
     private const PRICING_CACHE_SECONDS = 3600;
 
+    private const LAST_KNOWN_PRICING_CACHE_KEY = 'pixelforge.pricing.last_known';
+
     public function __construct(
         private readonly string $baseUrl,
         private readonly ?string $apiKey,
@@ -53,14 +55,25 @@ class PixelforgeClient
 
     /**
      * The current rates and token tables. Public and slow to change, so cached for an hour.
+     *
+     * The last table fetched is also kept indefinitely, so a Pixelforge outage
+     * doesn't stop us estimating costs. Actual costs never depend on it: each
+     * generation is billed at the rates Pixelforge returns with it.
      */
     public function pricing(): PricingTable
     {
-        $pricing = Cache::remember(
-            self::PRICING_CACHE_KEY,
-            self::PRICING_CACHE_SECONDS,
-            fn (): array => $this->send(fn (PendingRequest $request): Response => $request->get('pricing'))->json(),
-        );
+        $pricing = Cache::get(self::PRICING_CACHE_KEY);
+
+        if (! is_array($pricing)) {
+            try {
+                $pricing = $this->send(fn (PendingRequest $request): Response => $request->get('pricing'))->json();
+            } catch (PixelforgeException $exception) {
+                $pricing = Cache::get(self::LAST_KNOWN_PRICING_CACHE_KEY) ?? throw $exception;
+            }
+
+            Cache::put(self::PRICING_CACHE_KEY, $pricing, self::PRICING_CACHE_SECONDS);
+            Cache::forever(self::LAST_KNOWN_PRICING_CACHE_KEY, $pricing);
+        }
 
         return PricingTable::fromArray($pricing);
     }
