@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import AppLogoTile from '@/components/AppLogoTile.vue';
 import { Button } from '@/components/ui/button';
 import { dashboard, login, register } from '@/routes';
 </script>
@@ -13,7 +13,7 @@ import { dashboard, login, register } from '@/routes';
             class="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6"
         >
             <span class="flex items-center gap-2 text-sm font-semibold">
-                <AppLogoIcon class="size-5 fill-current" />
+                <AppLogoTile class="size-7" />
                 Pixelforge
             </span>
             <nav class="flex items-center gap-2 text-sm">
