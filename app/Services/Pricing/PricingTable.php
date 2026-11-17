@@ -24,7 +24,9 @@ final readonly class PricingTable
     ) {}
 
     /**
-     * @param  array{rates: array{input_text_tokens: string, input_image_tokens: string, output_tokens: string, reasoning_tokens: string}, tokens: array{characters_per_text_token: int, text_token_variance: float|int, per_reference_image: int, output: array<string, array<string, int>>, reasoning: array<string, array{min: int, max: int}>}}  $pricing
+     * Built from the decoded GET /v1/pricing body, which is external data and read defensively.
+     *
+     * @param  array<string, mixed>  $pricing
      */
     public static function fromArray(array $pricing): self
     {
@@ -33,7 +35,7 @@ final readonly class PricingTable
         return new self(
             rates: Rates::fromArray($pricing['rates']),
             charactersPerTextToken: (int) $tokens['characters_per_text_token'],
-            textTokenVarianceBasisPoints: (int) round($tokens['text_token_variance'] * 10_000),
+            textTokenVarianceBasisPoints: (int) round((float) $tokens['text_token_variance'] * 10_000),
             tokensPerReferenceImage: (int) $tokens['per_reference_image'],
             outputTokens: $tokens['output'],
             reasoningTokens: $tokens['reasoning'],
