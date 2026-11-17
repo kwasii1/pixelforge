@@ -31,13 +31,14 @@ PIXELFORGE_WEBHOOK_SECRET=whsec_...
 
 ```bash
 php artisan migrate
-composer run dev            # web server, queue worker, logs and Vite
-php artisan schedule:work   # in another terminal: polls Pixelforge for missed webhooks
+composer run dev   # web server, queue worker, scheduler, logs and Vite
 ```
+
+The scheduler is registered with `DevCommands` in `AppServiceProvider`. It runs `pixelforge:sync-generations` every minute, which polls Pixelforge for missed webhooks.
 
 To receive webhooks locally, expose the app with a tunnel (for example `ngrok http 8000`) and set `https://<tunnel>/webhooks/pixelforge` as the webhook URL of your **local** Pixelforge API key. Without a tunnel, the scheduler still picks up results by polling, about two minutes after a generation goes quiet.
 
-Make yourself an operator to see the report:
+Make yourself an operator to see the report. A **Report** link then appears in the header, and the page is at `/admin/report`:
 
 ```bash
 php artisan app:make-admin you@example.com
