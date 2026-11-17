@@ -40,6 +40,14 @@ final readonly class PricingCalculator
     }
 
     /**
+     * The cost of one kind of token, for showing a breakdown. The total comes from providerCost().
+     */
+    public function lineCost(int $tokens, int $ratePerMillion): int
+    {
+        return self::divideRoundingUp($tokens * $ratePerMillion, self::TOKENS_PER_RATE_UNIT);
+    }
+
+    /**
      * What the user pays for a provider cost: the cost plus the markup, rounded up to the nanodollar.
      */
     public function userPrice(int $providerCost): int

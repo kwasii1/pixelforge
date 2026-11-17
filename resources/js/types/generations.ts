@@ -32,6 +32,18 @@ export type TokenUsage = {
     total_tokens?: number;
 };
 
+export type CostBreakdown = {
+    lines: {
+        label: string;
+        tokens: number;
+        ratePerMillion: string;
+        cost: Money;
+    }[];
+    providerCost: Money;
+    markup: Money;
+    price: Money;
+};
+
 export type GenerationStatus = 'queued' | 'processing' | 'succeeded' | 'failed';
 
 export type Generation = {
@@ -47,9 +59,7 @@ export type Generation = {
     isFinal: boolean;
     estimate: { min: Money; max: Money };
     price: Money | null;
-    providerCost: Money | null;
-    usage: TokenUsage | null;
-    rates: Record<string, string> | null;
+    costBreakdown: CostBreakdown | null;
     imageUrl: string | null;
     imageUrlExpiresAt: string | null;
     imageExpired: boolean;

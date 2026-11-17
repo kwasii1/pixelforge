@@ -7,6 +7,76 @@ use App\Models\User;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 
+describe('index', function () {
+    it('redirects guests to the login page', function () {
+        $this->get(route('generations.index'))->assertRedirect(route('login'));
+    });
+
+    it('lists only the user\'s own generations, newest first', function () {
+        $user = User::factory()->create();
+        $older = Generation::factory()->for($user)->succeeded()->create(['created_at' => now()->subHour()]);
+        $newer = Generation::factory()->for($user)->create();
+        Generation::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('generations.index'));
+
+        $response->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('generations/Index')
+            ->has('generations.data', 2)
+            ->where('generations.data.0.id', $newer->id)
+            ->where('generations.data.1.id', $older->id)
+            ->where('hasGenerationsInProgress', true));
+    });
+
+    it('shows the estimate, the exact charge and how it was worked out for a succeeded generation', function () {
+        $generation = Generation::factory()->succeeded()->create();
+
+        $response = $this->actingAs($generation->user)->get(route('generations.index'));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('generations.data.0.estimate.max', ['exact' => '0.086343750', 'display' => '$0.0863'])
+            ->where('generations.data.0.price', ['exact' => '0.070700000', 'display' => '$0.0707'])
+            ->where('generations.data.0.costBreakdown.lines.2', [
+                'label' => 'Image output',
+                'tokens' => 1100,
+                'ratePerMillion' => '40.00',
+                'cost' => ['exact' => '0.044000000', 'display' => '$0.0440'],
+            ])
+            ->where('generations.data.0.costBreakdown.providerCost.exact', '0.056560000')
+            ->where('generations.data.0.costBreakdown.markup.exact', '0.014140000')
+            ->where('hasGenerationsInProgress', false));
+    });
+
+    it('shows a failed generation as free with a readable reason', function () {
+        $generation = Generation::factory()->failed()->create(['error_code' => 'internal_error']);
+
+        $response = $this->actingAs($generation->user)->get(route('generations.index'));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('generations.data.0.status', 'failed')
+            ->where('generations.data.0.price.exact', '0.000000000')
+            ->where('generations.data.0.failureReason', 'Pixelforge had an internal error. Trying again usually works.')
+            ->where('generations.data.0.costBreakdown', null));
+    });
+
+    it('labels a generation waiting on Pixelforge capacity', function () {
+        $generation = Generation::factory()->create(['submission_attempts' => 2]);
+
+        $response = $this->actingAs($generation->user)->get(route('generations.index'));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('generations.data.0.statusLabel', 'Waiting for capacity'));
+    });
+
+    it('marks an image whose URL has expired', function () {
+        $generation = Generation::factory()->succeeded()->create(['image_url_expires_at' => now()->subMinute()]);
+
+        $response = $this->actingAs($generation->user)->get(route('generations.index'));
+
+        $response->assertInertia(fn (Assert $page) => $page->where('generations.data.0.imageExpired', true));
+    });
+});
+
 describe('create', function () {
     it('redirects guests to the login page', function () {
         $this->get(route('generations.create'))->assertRedirect(route('login'));
