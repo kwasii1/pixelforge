@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { Plus, X } from '@lucide/vue';
 import { computed } from 'vue';
 import { store } from '@/actions/App/Http/Controllers/GenerationController';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useCostEstimate } from '@/composables/useCostEstimate';
 import { formatNanodollars } from '@/lib/money';
+import { index as creditsIndex } from '@/routes/credits';
 import type { Option, Pricing } from '@/types/generations';
 
 const props = defineProps<{
@@ -54,6 +55,14 @@ const minimumPrice = computed(() =>
 );
 const maximumPrice = computed(() =>
     formatNanodollars(estimate.value.maximumPrice),
+);
+
+const page = usePage();
+const credits = computed(() => page.props.credits);
+
+const canAfford = computed(
+    () =>
+        (credits.value?.balanceNanodollars ?? 0) >= estimate.value.maximumPrice,
 );
 
 const markupPercent = computed(
@@ -109,10 +118,13 @@ function addReferenceImage(): void {
     }
 }
 
+// Errors for keys outside the form's fields, such as "reference_images.0" or "credits".
+function fieldError(key: string): string | undefined {
+    return (form.errors as Record<string, string | undefined>)[key];
+}
+
 function referenceImageError(index: number): string | undefined {
-    return (form.errors as Record<string, string | undefined>)[
-        `reference_images.${index}`
-    ];
+    return fieldError(`reference_images.${index}`);
 }
 
 function removeReferenceImage(index: number): void {
@@ -329,10 +341,29 @@ function submit(): void {
                         </p>
                     </details>
 
+                    <div class="grid gap-2 border-t pt-4 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-muted-foreground">Balance</span>
+                            <span class="tabular-nums">{{
+                                credits?.balance.display
+                            }}</span>
+                        </div>
+                        <p v-if="!canAfford" role="alert">
+                            Your balance doesn't cover the most this could cost.
+                            <Link
+                                :href="creditsIndex()"
+                                class="font-medium underline underline-offset-4"
+                            >
+                                Buy credits
+                            </Link>
+                        </p>
+                        <InputError :message="fieldError('credits')" />
+                    </div>
+
                     <Button
                         type="submit"
                         class="hidden w-full lg:inline-flex"
-                        :disabled="form.processing"
+                        :disabled="form.processing || !canAfford"
                     >
                         <Spinner v-if="form.processing" />
                         Generate
@@ -350,9 +381,16 @@ function submit(): void {
                             {{ maximumPrice }}
                         </p>
                     </div>
-                    <Button type="submit" :disabled="form.processing">
+                    <Button
+                        v-if="canAfford"
+                        type="submit"
+                        :disabled="form.processing"
+                    >
                         <Spinner v-if="form.processing" />
                         Generate
+                    </Button>
+                    <Button v-else as-child>
+                        <Link :href="creditsIndex()">Buy credits</Link>
                     </Button>
                 </div>
             </div>

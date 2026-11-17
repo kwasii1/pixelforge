@@ -4,6 +4,7 @@ use App\Enums\GenerationStatus;
 use App\Jobs\SubmitGeneration;
 use App\Models\Generation;
 use App\Models\User;
+use App\Services\Credits\CreditLedger;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -123,10 +124,10 @@ describe('create', function () {
 });
 
 describe('store', function () {
-    it('records the generation with its estimate and queues it for submission', function () {
+    it('records the generation with its estimate, holds the most it can cost and queues it', function () {
         Queue::fake();
         fakePixelforgePricing();
-        $user = User::factory()->create();
+        $user = User::factory()->withCredits(1)->create();
 
         $response = $this->actingAs($user)->post(route('generations.store'), [
             'prompt' => str_repeat('a', 400),
@@ -144,6 +145,45 @@ describe('store', function () {
             ->estimated_max_price->toBe(467_343_750)
             ->estimated_min_price->toBe(357_781_250);
         Queue::assertPushed(SubmitGeneration::class, fn (SubmitGeneration $job): bool => $job->generation->is($generation));
+        expect($user->refresh()->balance)->toBe(1_000_000_000 - 467_343_750);
+        $this->assertDatabaseHas('credit_transactions', [
+            'generation_id' => $generation->id,
+            'type' => 'hold',
+            'amount' => -467_343_750,
+        ]);
+    });
+
+    it('refuses a generation the user cannot afford at its most expensive', function () {
+        Queue::fake();
+        fakePixelforgePricing();
+        $user = User::factory()->create();
+        app(CreditLedger::class)->purchase($user, 467_343_749);
+
+        $response = $this->actingAs($user)->post(route('generations.store'), [
+            'prompt' => str_repeat('a', 400),
+            'size' => '1536x1024',
+            'quality' => 'high',
+            'reference_images' => ['https://example.com/a.png', 'https://example.com/b.png'],
+        ]);
+
+        $response->assertInvalid(['credits' => 'could cost up to $0.4673']);
+        expect(Generation::count())->toBe(0)
+            ->and($user->refresh()->balance)->toBe(467_343_749);
+        Queue::assertNothingPushed();
+    });
+
+    it('does not let two submissions spend the same credits', function () {
+        Queue::fake();
+        fakePixelforgePricing();
+        $user = User::factory()->create();
+        app(CreditLedger::class)->purchase($user, 500_000_000);
+        $input = ['prompt' => str_repeat('a', 400), 'size' => '1536x1024', 'quality' => 'high', 'reference_images' => ['https://example.com/a.png', 'https://example.com/b.png']];
+
+        $this->actingAs($user)->post(route('generations.store'), $input)->assertRedirect(route('generations.index'));
+        $second = $this->actingAs($user)->post(route('generations.store'), $input);
+
+        $second->assertInvalid(['credits']);
+        expect(Generation::count())->toBe(1);
     });
 
     it('rejects invalid input', function (array $input, string $field) {

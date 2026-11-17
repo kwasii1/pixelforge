@@ -22,6 +22,7 @@ import {
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
+import { index as creditsIndex } from '@/routes/credits';
 import { create, index } from '@/routes/generations';
 import type { BreadcrumbItem, NavItem } from '@/types';
 
@@ -35,6 +36,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
+const credits = computed(() => page.props.credits);
+const balanceTitle = computed(() =>
+    credits.value ? 'Balance: $' + credits.value.balance.exact : '',
+);
 const { isCurrentUrl } = useCurrentUrl();
 
 const mainNavItems: NavItem[] = [
@@ -45,6 +50,10 @@ const mainNavItems: NavItem[] = [
     {
         title: 'History',
         href: index(),
+    },
+    {
+        title: 'Credits',
+        href: creditsIndex(),
     },
 ];
 </script>
@@ -108,6 +117,15 @@ const mainNavItems: NavItem[] = [
                 </nav>
 
                 <div class="ml-auto flex items-center gap-2">
+                    <Link
+                        v-if="credits"
+                        :href="creditsIndex()"
+                        class="rounded-md border px-3 py-1.5 text-sm font-medium tabular-nums hover:bg-accent"
+                        :title="balanceTitle"
+                    >
+                        {{ credits.balance.display }}
+                        <span class="sr-only">credit balance</span>
+                    </Link>
                     <DropdownMenu>
                         <DropdownMenuTrigger :as-child="true">
                             <Button
